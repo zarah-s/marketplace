@@ -1,9 +1,37 @@
 // XXX even though ethers is not used in the code below, it's very likely
 // it will be used by any DApp, so we are already including it here
 const { ethers } = require("ethers");
+const { stringToHex } = require("./helpers/helpers");
 
 const rollup_server = process.env.ROLLUP_HTTP_SERVER_URL;
 console.log("HTTP rollup_server url is " + rollup_server);
+
+const emitReport = async (e) => {
+  await fetch(rollup_server + "/report", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      payload: stringToHex(JSON.stringify({ error: e })),
+    }),
+  });
+  return "reject";
+}
+
+
+const emitNotice = async (data) => {
+  const hexresult = stringToHex(data);
+  const advance_req = await fetch(rollup_server + "/notice", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ payload: hexresult }),
+  });
+  return advance_req;
+}
+
 
 async function handle_advance(data) {
   console.log("Received advance request data " + JSON.stringify(data));
