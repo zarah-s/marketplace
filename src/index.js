@@ -120,6 +120,19 @@ transactions[checks.transaction.id] = {
 
       break;
 
+      case methods.SLASH:
+     if(sender === owner){
+       balanceOf[JSONpayload.user] = balanceOf[JSONpayload.user] - JSONpayload.amount
+      balanceOf[owner] = balanceOf[owner] + JSONpayload.amount
+            await emitNotice({ state: "balances", data: balanceOf })
+
+     }else{
+      await emitReport({success:false,msg:"ONLY_OWNER"})
+
+     }
+
+      break;
+
   
     default:
       break;
