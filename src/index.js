@@ -81,7 +81,44 @@ async function handle_advance(data) {
       
       break;
 
-    
+    case methods.RELEASE:
+      const checks = checkReleaseFundsTransactionValidity(sender,transactions,JSONpayload.transactionId);
+      if(checks.success){
+balanceOf[checks.transaction.from] = balanceOf[checks.transaction.from]+ checks.transaction.amount;
+balanceOf[owner] = balanceOf[owner]- checks.transaction.amount;
+transactions[checks.transaction.id] = {
+  ...transactions[checks.transaction.id],
+  fulfiled:true
+}
+
+ await emitNotice({ state: "transactions", data: transactions })
+            await emitNotice({ state: "balances", data: balanceOf })
+
+
+      }else{
+        await emitReport(checks)
+      }
+      break;
+
+    case methods.ADD_PRODUCT:
+      const checks = checkCreateProductTransactionValidity(JSONpayload);
+     if(checks.success){
+       const jsonData = {
+        ...JSONpayload,
+        method:undefined,
+        owner:sender,
+        id:products.length
+      }
+
+      products.push(jsonData)
+            await emitNotice({ state: "products", data: products })
+
+     }else{
+      await emitReport(checks)
+     }
+
+
+      break;
 
   
     default:
