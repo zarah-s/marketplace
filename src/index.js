@@ -2,15 +2,19 @@
 // it will be used by any DApp, so we are already including it here
 const { ethers } = require("ethers");
 const { stringToHex } = require("./helpers/helpers");
+const methods = require("./methods");
+const {checkProductPaymentTransactionValidity,checkReleaseFundsTransactionValidity,checkCreateProductTransactionValidity} = require("./checks")
 
 const rollup_server = process.env.ROLLUP_HTTP_SERVER_URL;
 console.log("HTTP rollup_server url is " + rollup_server);
 
-
+const owner = "0x42AcD393442A1021f01C796A23901F3852e89Ff3";
 let transactions = [];
-let balance = {};
+let balanceOf = {
+  [owner]:1000000000*10e18
+};
 let allowance = {};
-let store = [];
+let products = [];
 let stakes = []
 
 const emitReport = async (e) => {
@@ -41,6 +45,50 @@ const emitNotice = async (data) => {
 
 
 async function handle_advance(data) {
+
+ const payload = data.payload;
+  let JSONpayload = {};
+  const payloadStr = ethers.toUtf8String(payload);
+  JSONpayload = JSON.parse(payloadStr);
+
+  console.log("PAYLOAD========>>", payloadStr)
+  console.log("------------------------------------------")
+
+  const sender = data.metadata.msg_sender;
+
+  switch (JSONpayload.method) {
+    case methods.DEPOSIT:
+      const checks = checkProductPaymentTransactionValidity(sender,balanceOf,products,JSONpayload.productId)
+    if(checks.success){
+      balanceOf[sender] = balanceOf[sender]-checks.product.price;
+      balanceOf[owner] = balanceOf[owner]+checks.product.price;
+      const transaction = {
+        from: product.owner,
+        to:sender,
+        id:transactions.length,
+        amount:checks.product.price,
+        productId:checks.product.id,
+        fulfiled:false,
+        
+      }
+      transactions.push(transaction);
+            await emitNotice({ state: "transactions", data: transactions })
+            await emitNotice({ state: "balances", data: balanceOf })
+
+    }else{
+     await emitReport(checks)
+    }
+      
+      break;
+
+    
+
+  
+    default:
+      break;
+  }
+
+
   console.log("Received advance request data " + JSON.stringify(data));
   return "accept";
 }
