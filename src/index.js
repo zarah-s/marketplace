@@ -6,6 +6,13 @@ const { stringToHex } = require("./helpers/helpers");
 const rollup_server = process.env.ROLLUP_HTTP_SERVER_URL;
 console.log("HTTP rollup_server url is " + rollup_server);
 
+
+let transactions = [];
+let balance = {};
+let allowance = {};
+let store = [];
+let stakes = []
+
 const emitReport = async (e) => {
   await fetch(rollup_server + "/report", {
     method: "POST",
